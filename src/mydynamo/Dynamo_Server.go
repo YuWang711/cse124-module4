@@ -25,22 +25,23 @@ func (s *DynamoServer) SendPreferenceList(incomingList []DynamoNode, _ *Empty) e
 // Forces server to gossip
 // As this method takes no arguments, we must use the Empty placeholder
 func (s *DynamoServer) Gossip(_ Empty, _ *Empty) error {
-	panic("todo")
+	return nil
 }
 
 //Makes server unavailable for some seconds
 func (s *DynamoServer) Crash(seconds int, success *bool) error {
-	panic("todo")
+	return nil
 }
 
 // Put a file to this server and W other servers
 func (s *DynamoServer) Put(value PutArgs, result *bool) error {
-	panic("todo")
+	//Attemp to put value into its local key/value store.
+	return nil
 }
 
 //Get a file from this server, matched with R other servers
 func (s *DynamoServer) Get(key string, result *DynamoResult) error {
-	panic("todo")
+	return nil
 }
 
 /* Belows are functions that implement server boot up and initialization */
