@@ -46,6 +46,10 @@ func MakeConnectedClient(port int) *mydynamo.RPCClient {
 func PutFreshContext(key string, value []byte) mydynamo.PutArgs {
 	return mydynamo.NewPutArgs(key, mydynamo.NewContext(mydynamo.NewVectorClock()), value)
 }
+//Use an existing vectorclock for context
+func PutContext(key string, value []byte, clock mydynamo.VectorClock) mydynamo.PutArgs {
+	return mydynamo.NewPutArgs(key, mydynamo.NewContext(clock), value)
+}
 
 //Tests if the contents of two byte arrays are equal
 func valuesEqual(v1 []byte, v2 []byte) bool {

@@ -3,7 +3,7 @@ package mydynamo
 
 type VectorClock struct {
 	//todo
-	nodeId_version map[string]uint64
+	NodeId_version map[string]uint64
 }
 /*
 	Two Update rules:
@@ -17,16 +17,16 @@ type VectorClock struct {
 //Creates a new VectorClock
 func NewVectorClock() VectorClock {
 	return VectorClock{
-		nodeId_version: make(map[string]uint64),
+		NodeId_version: make(map[string]uint64),
 	}
 }
 
 //Returns true if the other VectorClock is causally descended from this one
 func (s VectorClock) LessThan(otherClock VectorClock) bool {
 	if s.Equals(otherClock) == false {
-		for index,element := range s.nodeId_version{
-			if _, ok := otherClock.nodeId_version[index];ok{
-				if element > otherClock.nodeId_version[index]{
+		for index,element := range s.NodeId_version{
+			if _, ok := otherClock.NodeId_version[index];ok{
+				if element > otherClock.NodeId_version[index]{
 					return false
 				}
 			} else {
@@ -52,17 +52,17 @@ func (s VectorClock) Concurrent(otherClock VectorClock) bool {
 
 //Increments this VectorClock at the element associated with nodeId
 func (s *VectorClock) Increment(nodeId string) {
-	s.nodeId_version[nodeId] += 1
+	s.NodeId_version[nodeId] += 1
 }
 
 //Changes this VectorClock to be causally descended from all VectorClocks in clocks
 func (s *VectorClock) Combine(clocks []VectorClock) {
 	for _,clock := range clocks{
-		for index, element := range clock.nodeId_version {
-			if _, ok := s.nodeId_version[index];ok{
-				s.nodeId_version[index] = Max(element, s.nodeId_version[index])
+		for index, element := range clock.NodeId_version {
+			if _, ok := s.NodeId_version[index];ok{
+				s.NodeId_version[index] = Max(element, s.NodeId_version[index])
 			} else {
-				s.nodeId_version[index] = element
+				s.NodeId_version[index] = element
 			}
 		}
 	}
@@ -70,13 +70,13 @@ func (s *VectorClock) Combine(clocks []VectorClock) {
 
 //Tests if two VectorClocks are equal
 func (s *VectorClock) Equals(otherClock VectorClock) bool {
-	for index,element := range s.nodeId_version {
-		if _, ok := otherClock.nodeId_version[index];ok{
-			if element != otherClock.nodeId_version[index] {
+	for index,element := range s.NodeId_version {
+		if _, ok := otherClock.NodeId_version[index];ok{
+			if element != otherClock.NodeId_version[index] {
 				return false
 			}
 		} else {
-			if s.nodeId_version[index] != 0 {
+			if s.NodeId_version[index] != 0 {
 				return false
 			}
 		}
