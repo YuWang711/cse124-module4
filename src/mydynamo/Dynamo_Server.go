@@ -80,6 +80,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 	if s.Crashed == true {
 		return errors.New("Node Crashed")
 	}
+	log.Print(value.Value)
 	log.Print("In Put, Before checking new < old ")
 	if _,ok := s.Dynamo_Store[value.Key]; ok {
 		for _,element := range s.Dynamo_Store[value.Key].EntryList {
@@ -107,11 +108,12 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				new_EntryList = append(new_EntryList, new_Object)
 				s.Dynamo_Store[value.Key].EntryList = new_EntryList
 				s.m.Unlock()
-
+				/*
 				var new_result bool
 				new_result = false
 				i := 0
 				var Wvalue = s.wValue
+				
 				for i < (Wvalue) {
 					log.Print("Send to others")
 					if i >= len(s.preferenceList) {
@@ -140,7 +142,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 					}
 					log.Print("Finish send to others")
 					i++
-				}
+				}*/
 				*result = true
 				return nil
 			}
@@ -179,6 +181,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 		s.Dynamo_Store[value.Key] = &new_DynamoResult
 		log.Print("Finished creating new key")
 		s.m.Unlock()
+		
 		var new_result bool
 		new_result = false
 		i := 0
