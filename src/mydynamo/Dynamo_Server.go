@@ -222,11 +222,13 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 	if s.Crashed == true {
 		return errors.New("Node Crashed")
 	}
+	log.Print("In GET")
 	log.Print(s.Dynamo_Store[key].EntryList)
 	//Need to work with Dynamo Result here
 	if _, ok := s.Dynamo_Store[key]; !ok{
 		return errors.New("Node Key was not found")
 	}
+	log.Print("Key is found - Get")
 	for _,element := range s.Dynamo_Store[key].EntryList {
 		element.Context = NewContext(s.clock)
 		result.EntryList = append(result.EntryList, element)
@@ -235,15 +237,16 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 	var Rvalue = s.rValue
 	var temp_result DynamoResult
 	var clocks = make([]VectorClock,0)
+	log.Print("Sending to others")
 	for i < (Rvalue) {
+		if i >= len(s.preferenceList) {
+			break
+		}
 		if s.preferenceList[i] == s.selfNode {
 			i++
 			continue
 		}
 		var new_DynamoResult DynamoResult
-		if i >= len(s.preferenceList) {
-			break
-		}
 		var pref = s.preferenceList[i]
 		address := pref.Address + ":" + pref.Port
 		rpc_call,e := rpc.DialHTTP("tcp", address)
@@ -264,6 +267,7 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 		}
 		i++
 	}
+	log.Print("Finished sending")
 	s.clock.Combine(clocks)
 	for _,element := range temp_result.EntryList{
 		if element.Context.Clock.Concurrent(s.clock) {
