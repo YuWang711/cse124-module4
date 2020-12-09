@@ -9,7 +9,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
-//	"time"
+	"time"
 //	"errors"
 )
 
@@ -80,10 +80,10 @@ func main() {
 	//log.Print(len(dynamoNodeList))
 	nodePreferenceList := dynamoNodeList
 
-	//time.Sleep( 675 * time.Millisecond)
 	//Send the preference list to all servers
 	for _, info := range dynamoNodeList {
 		time.Sleep( 1 * time.Second)
+		//time.Sleep( 675 * time.Millisecond)
 		var empty mydynamo.Empty
 		c, _ := rpc.DialHTTP("tcp", info.Address+":"+info.Port)
 		if err != nil {
