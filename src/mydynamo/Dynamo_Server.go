@@ -1,3 +1,4 @@
+
 package mydynamo
 
 import (
@@ -86,10 +87,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 	if _,ok := s.Dynamo_Store[value.Key]; ok {
 		for _,element := range s.Dynamo_Store[value.Key].EntryList {
 			if value.Context.Clock.LessThan(element.Context.Clock){
-				if value.Context.Clock.Concurrent(element.Context.Clock) {
-					if value.Context.Clock.Equals(element.Context.Clock) {
-						return errors.New("Put has failed new Context < old Context")
-					}
+				if element.Context.Clock.Concurrent(value.Context.Clock){
 					continue
 				}
 				return errors.New("Put has failed new Context < old Context")
@@ -98,7 +96,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 		log.Print("In Put, After checking new < old ")
 		for _,element := range s.Dynamo_Store[value.Key].EntryList {
 			if element.Context.Clock.LessThan(value.Context.Clock){
-				if element.Context.Clock.Concurrent(value.Context.Clock) {
+				if element.Context.Clock.Concurrent(value.Context.Clock){
 					continue
 				}
 				log.Print("In Put, old < new ")
@@ -117,12 +115,12 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				new_EntryList = append(new_EntryList, new_Object)
 				s.Dynamo_Store[value.Key].EntryList = new_EntryList
 				s.m.Unlock()
-
 				var new_result bool
 				new_result = false
+				s.CalledFrom[s.selfNode.Address+":"+s.selfNode.Port] = true
 				i := 0
 				var Wvalue = s.wValue
-				for i < (Wvalue) {
+				for i < (Wvalue-1) {
 					log.Print("Send to others")
 					log.Print(len(s.preferenceList))
 					if i >= len(s.preferenceList) {
@@ -137,11 +135,11 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 						log.Print("Skip")
 						continue
 					}
-					if _,ok := s.CalledFrom[address]; !ok{
+					if _,ok := s.CalledFrom[address]; !ok {
 						s.CalledFrom[address] = true
 					} else  {
 						if s.CalledFrom[address]{
-							break
+							return nil
 						} else {
 							s.CalledFrom[address] = true
 						}
@@ -170,12 +168,11 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				return nil
 			}
 		}
-		log.Print("In Put, Case New == Old")
 		s.m.Lock()
+		log.Print("nodeId", s.nodeID)
 		var new_Object ObjectEntry
 		new_Object.Context = value.Context
 		new_Object.Value = value.Value
-		log.Print("nodeId", s.nodeID)
 		for i,_ := range s.Dynamo_Store[value.Key].EntryList {
 			for index,element := range s.Dynamo_Store[value.Key].EntryList[i].Value{
 				if element != new_Object.Value[index] {
@@ -209,7 +206,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 		new_result = false
 		i := 0
 		var Wvalue = s.wValue
-		for i < (Wvalue) {
+		for i < (Wvalue-1) {
 			log.Print("Send to others")
 			if i >= len(s.preferenceList) {
 				break
@@ -221,7 +218,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				s.CalledFrom[address] = true
 			} else {
 				if s.CalledFrom[address]{
-					break
+					return nil
 				} else {
 					s.CalledFrom[address] = true
 				}
@@ -277,7 +274,7 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 	var temp_result DynamoResult
 	var clocks = make([]VectorClock,0)
 	log.Print("Sending to others")
-	for i < (Rvalue) {
+	for i < (Rvalue-1) {
 		if i >= len(s.preferenceList) {
 			break
 		}
