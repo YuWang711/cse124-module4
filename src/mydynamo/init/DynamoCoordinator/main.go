@@ -86,8 +86,8 @@ func main() {
 		var empty mydynamo.Empty
 		var c_err error
 		c_err = errors.New("testing")
-		for c_err != nil {
-			c, c_err := rpc.DialHTTP("tcp", info.Address+":"+info.Port)
+		for c_err != nil{
+			c, _ := rpc.DialHTTP("tcp", info.Address+":"+info.Port)
 			if err != nil {
 				log.Println("Failed to send preference list")
 			} else {
@@ -96,7 +96,7 @@ func main() {
 					log.Println("Failed to send preference list")
 				}
 			}
-			if c_err == nil{
+			if c_err == nil {
 				break
 			}
 		}

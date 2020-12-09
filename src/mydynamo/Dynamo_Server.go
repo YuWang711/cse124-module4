@@ -103,7 +103,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				//PUTTING INTO LOCAL
 				//Case when there is at least one clock in current key that is less than
 				//New clock
-				s.m.Lock()
+			//	s.m.Lock()
 				/*
 				var new_EntryList []ObjectEntry
 				var new_Object ObjectEntry
