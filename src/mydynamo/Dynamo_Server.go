@@ -88,14 +88,10 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 			if value.Context.Clock.LessThan(element.Context.Clock){
 				if value.Context.Clock.Concurrent(element.Context.Clock) {
 					if value.Context.Clock.Equals(element.Context.Clock) {
-						log.Print(value.Context.Clock)
-						log.Print(element.Context.Clock)
 						return errors.New("Put has failed new Context < old Context")
 					}
 					continue
 				}
-				log.Print(value.Context.Clock)
-				log.Print(element.Context.Clock)
 				return errors.New("Put has failed new Context < old Context")
 			}
 		}
@@ -135,17 +131,20 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 					var pref = s.preferenceList[i]
 					address := pref.Address + ":" + pref.Port
 					log.Print("Send to address: ", address)
-					if _,ok := s.CalledFrom[address]; !ok{
-						s.CalledFrom[address] = true
-					} else {
-						i++
-						continue
-					}
 					if s.preferenceList[i] == s.selfNode{
 						i++
 						Wvalue++
 						log.Print("Skip")
 						continue
+					}
+					if _,ok := s.CalledFrom[address]; !ok{
+						s.CalledFrom[address] = true
+					} else  {
+						if s.CalledFrom[address]{
+							break
+						} else {
+							s.CalledFrom[address] = true
+						}
 					}
 					rpc_call,e := rpc.DialHTTP("tcp", address)
 					if e != nil {
@@ -221,8 +220,11 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 			if _,ok := s.CalledFrom[address]; !ok{
 				s.CalledFrom[address] = true
 			} else {
-				i++
-				continue
+				if s.CalledFrom[address]{
+					break
+				} else {
+					s.CalledFrom[address] = true
+				}
 			}
 			if s.preferenceList[i] == s.selfNode{
 				i++
@@ -260,6 +262,7 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 	}
 	log.Print("In GET")
 	log.Print(s.Dynamo_Store[key].EntryList)
+	log.Print("ID : ", s.selfNode)
 	//Need to work with Dynamo Result here
 	if _, ok := s.Dynamo_Store[key]; !ok{
 		return errors.New("Node Key was not found")
@@ -288,8 +291,11 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 		if _,ok := s.CalledFrom[address]; !ok{
 			s.CalledFrom[address] = true
 		} else {
-			i++
-			continue
+			if s.CalledFrom[address] {
+				return nil
+			} else {
+				s.CalledFrom[address] = true
+			}
 		}
 		rpc_call,e := rpc.DialHTTP("tcp", address)
 		if e != nil {
@@ -316,6 +322,9 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 	s.clock.Combine(clocks)
 	for _,element := range temp_result.EntryList{
 		if element.Context.Clock.Concurrent(s.clock) {
+			if element.Context.Clock.Equals(s.clock){
+				continue
+			}
 			result.EntryList = append(result.EntryList, element)
 		}
 	}
