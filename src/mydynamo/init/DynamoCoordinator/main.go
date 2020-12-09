@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"errors"
 )
 
 func main() {
@@ -75,19 +76,28 @@ func main() {
 
 	//Create a duplicate of dynamoNodeList that we can rotate
 	//so that each node has a distinct preference list
+
+	//log.Print(len(dynamoNodeList))
 	nodePreferenceList := dynamoNodeList
 
 	//Send the preference list to all servers
 	for _, info := range dynamoNodeList {
 		time.Sleep( 1 * time.Second)
 		var empty mydynamo.Empty
-		c, _ := rpc.DialHTTP("tcp", info.Address+":"+info.Port)
-		if err != nil {
-			log.Println("Failed to send preference list")
-		} else {
-			err2 := c.Call("MyDynamo.SendPreferenceList", nodePreferenceList, &empty)
-			if err2 != nil {
+		var c_err error
+		c_err = errors.New("testing")
+		for c_err != nil {
+			c, c_err := rpc.DialHTTP("tcp", info.Address+":"+info.Port)
+			if err != nil {
 				log.Println("Failed to send preference list")
+			} else {
+				err2 := c.Call("MyDynamo.SendPreferenceList", nodePreferenceList, &empty)
+				if err2 != nil {
+					log.Println("Failed to send preference list")
+				}
+			}
+			if c_err == nil{
+				break
 			}
 		}
 		nodePreferenceList = mydynamo.RotateServerList(nodePreferenceList)

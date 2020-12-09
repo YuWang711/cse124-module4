@@ -104,6 +104,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				//Case when there is at least one clock in current key that is less than
 				//New clock
 				s.m.Lock()
+				/*
 				var new_EntryList []ObjectEntry
 				var new_Object ObjectEntry
 				new_Object.Context = value.Context
@@ -111,7 +112,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				new_EntryList = append(new_EntryList, new_Object)
 				s.Dynamo_Store[value.Key].EntryList = new_EntryList
 				s.m.Unlock()
-				/*var new_result bool
+				var new_result bool
 				new_result = false
 				i := 0
 				var Wvalue = s.wValue
