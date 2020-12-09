@@ -9,7 +9,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
-	"time"
+//	"time"
 	"errors"
 )
 
@@ -82,7 +82,7 @@ func main() {
 
 	//Send the preference list to all servers
 	for _, info := range dynamoNodeList {
-		time.Sleep( 1 * time.Second)
+//		time.Sleep( 1 * time.Second)
 		var empty mydynamo.Empty
 		var c_err error
 		c_err = errors.New("testing")
