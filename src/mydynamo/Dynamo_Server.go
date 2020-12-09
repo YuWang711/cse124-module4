@@ -86,7 +86,12 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 	if _,ok := s.Dynamo_Store[value.Key]; ok {
 		for _,element := range s.Dynamo_Store[value.Key].EntryList {
 			if value.Context.Clock.LessThan(element.Context.Clock){
-				if element.Context.Clock.Concurrent(value.Context.Clock) {
+				if value.Context.Clock.Concurrent(element.Context.Clock) {
+					if value.Context.Clock.Equals(element.Context.Clock) {
+						log.Print(value.Context.Clock)
+						log.Print(element.Context.Clock)
+						return errors.New("Put has failed new Context < old Context")
+					}
 					continue
 				}
 				log.Print(value.Context.Clock)
@@ -130,6 +135,12 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 					var pref = s.preferenceList[i]
 					address := pref.Address + ":" + pref.Port
 					log.Print("Send to address: ", address)
+					if _,ok := s.CalledFrom[address]; !ok{
+						s.CalledFrom[address] = true
+					} else {
+						i++
+						continue
+					}
 					if s.preferenceList[i] == s.selfNode{
 						i++
 						Wvalue++
@@ -152,6 +163,9 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 					}
 					log.Print("Finish send to others")
 					i++
+				}
+				for index,_ := range s.CalledFrom {
+					s.CalledFrom[index] = false
 				}
 				*result = true
 				return nil
