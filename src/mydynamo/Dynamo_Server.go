@@ -204,6 +204,12 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 			var pref = s.preferenceList[i]
 			address := pref.Address + ":" + pref.Port
 			log.Print("Send to address: ", address)
+			if _,ok := s.CalledFrom[address]; !ok{
+				s.CalledFrom[address] = true
+			} else {
+				i++
+				continue
+			}
 			if s.preferenceList[i] == s.selfNode{
 				i++
 				Wvalue++
@@ -224,6 +230,9 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 			}
 			log.Print("Finish send to others")
 			i++
+		}
+		for index,_ := range s.CalledFrom {
+			s.CalledFrom[index] = false
 		}
 		*result = true
 		return nil
