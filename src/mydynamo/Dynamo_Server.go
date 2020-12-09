@@ -21,6 +21,7 @@ type DynamoServer struct {
 	clock	       VectorClock
 	m	       sync.Mutex
 	Crashed	       bool
+	CalledFrom     map[string]bool
 }
 
 func (s *DynamoServer) SendPreferenceList(incomingList []DynamoNode, _ *Empty) error {
@@ -85,6 +86,9 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 	if _,ok := s.Dynamo_Store[value.Key]; ok {
 		for _,element := range s.Dynamo_Store[value.Key].EntryList {
 			if value.Context.Clock.LessThan(element.Context.Clock){
+				if element.Context.Clock.Concurrent(value.Context.Clock) {
+					continue
+				}
 				log.Print(value.Context.Clock)
 				log.Print(element.Context.Clock)
 				return errors.New("Put has failed new Context < old Context")
@@ -113,13 +117,13 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				s.Dynamo_Store[value.Key].EntryList = new_EntryList
 				s.m.Unlock()
 
-				/*
 				var new_result bool
 				new_result = false
 				i := 0
 				var Wvalue = s.wValue
 				for i < (Wvalue) {
 					log.Print("Send to others")
+					log.Print(len(s.preferenceList))
 					if i >= len(s.preferenceList) {
 						break
 					}
@@ -129,12 +133,14 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 					if s.preferenceList[i] == s.selfNode{
 						i++
 						Wvalue++
+						log.Print("Skip")
 						continue
 					}
 					rpc_call,e := rpc.DialHTTP("tcp", address)
 					if e != nil {
 						log.Print(e)
 					}
+					log.Print("Calling Put")
 					e = rpc_call.Call("MyDynamo.Put", value, &new_result)
 					if e != nil {
 						log.Print(e)
@@ -146,7 +152,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 					}
 					log.Print("Finish send to others")
 					i++
-				}*/
+				}
 				*result = true
 				return nil
 			}
@@ -256,6 +262,12 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 		var new_DynamoResult DynamoResult
 		var pref = s.preferenceList[i]
 		address := pref.Address + ":" + pref.Port
+		if _,ok := s.CalledFrom[address]; !ok{
+			s.CalledFrom[address] = true
+		} else {
+			i++
+			continue
+		}
 		rpc_call,e := rpc.DialHTTP("tcp", address)
 		if e != nil {
 			log.Print(e)
@@ -273,6 +285,9 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 			}
 		}
 		i++
+	}
+	for index,_ := range s.CalledFrom{
+		s.CalledFrom[index] = false
 	}
 	log.Print("Finished sending")
 	s.clock.Combine(clocks)
@@ -302,6 +317,7 @@ func NewDynamoServer(w int, r int, hostAddr string, hostPort string, id string) 
 		clock:		NewVectorClock(),
 		m:		mutex,
 		Crashed:	false,
+		CalledFrom:	make(map[string]bool),
 	}
 }
 
