@@ -83,7 +83,7 @@ func main() {
 	//time.Sleep( 675 * time.Millisecond)
 	//Send the preference list to all servers
 	for _, info := range dynamoNodeList {
-		time.Sleep( 1000 * time.Millisecond)
+		time.Sleep( 1 * time.Second)
 		var empty mydynamo.Empty
 		c, _ := rpc.DialHTTP("tcp", info.Address+":"+info.Port)
 		if err != nil {
