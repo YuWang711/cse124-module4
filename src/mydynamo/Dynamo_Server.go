@@ -85,6 +85,9 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 	if _,ok := s.Dynamo_Store[value.Key]; ok {
 		for _,element := range s.Dynamo_Store[value.Key].EntryList {
 			if value.Context.Clock.LessThan(element.Context.Clock){
+				if value.Context.Clock.Concurrent(element.Context.Clock) {
+					continue
+				}
 				log.Print(value.Context.Clock)
 				log.Print(element.Context.Clock)
 				return errors.New("Put has failed new Context < old Context")
@@ -93,6 +96,9 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 		log.Print("In Put, After checking new < old ")
 		for _,element := range s.Dynamo_Store[value.Key].EntryList {
 			if element.Context.Clock.LessThan(value.Context.Clock){
+				if element.Context.Clock.Concurrent(value.Context.Clock) {
+					continue
+				}
 				log.Print("In Put, old < new ")
 				s.m.Lock()
 				s.clock.Increment(s.nodeID)
@@ -181,7 +187,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 		s.Dynamo_Store[value.Key] = &new_DynamoResult
 		log.Print("Finished creating new key")
 		s.m.Unlock()
-		
+
 		var new_result bool
 		new_result = false
 		i := 0
