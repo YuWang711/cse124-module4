@@ -87,7 +87,7 @@ func main() {
 		var c_err error
 		c_err = errors.New("testing")
 		for c_err != nil{
-			c, _ := rpc.DialHTTP("tcp", info.Address+":"+info.Port)
+			c, c_err := rpc.DialHTTP("tcp", info.Address+":"+info.Port)
 			if err != nil {
 				log.Println("Failed to send preference list")
 			} else {
