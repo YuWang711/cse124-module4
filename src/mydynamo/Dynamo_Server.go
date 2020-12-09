@@ -85,9 +85,6 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 	if _,ok := s.Dynamo_Store[value.Key]; ok {
 		for _,element := range s.Dynamo_Store[value.Key].EntryList {
 			if value.Context.Clock.LessThan(element.Context.Clock){
-				if value.Context.Clock.Concurrent(element.Context.Clock) {
-					continue
-				}
 				log.Print(value.Context.Clock)
 				log.Print(element.Context.Clock)
 				return errors.New("Put has failed new Context < old Context")
@@ -114,12 +111,10 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				new_EntryList = append(new_EntryList, new_Object)
 				s.Dynamo_Store[value.Key].EntryList = new_EntryList
 				s.m.Unlock()
-				/*
-				var new_result bool
+				/*var new_result bool
 				new_result = false
 				i := 0
 				var Wvalue = s.wValue
-				
 				for i < (Wvalue) {
 					log.Print("Send to others")
 					if i >= len(s.preferenceList) {
