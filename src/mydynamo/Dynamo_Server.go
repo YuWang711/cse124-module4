@@ -123,7 +123,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 				s.CalledFrom[s.selfNode.Address+":"+s.selfNode.Port] = true
 				i := 0
 				var Wvalue = s.wValue
-				for i < (Wvalue-1) {
+				for i < (Wvalue) {
 					log.Print("Send to others")
 					log.Print(len(s.preferenceList))
 					if i >= len(s.preferenceList) {
@@ -134,7 +134,6 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 					log.Print("Send to address: ", address)
 					if s.preferenceList[i] == s.selfNode{
 						i++
-						Wvalue++
 						log.Print("Skip")
 						continue
 					}
@@ -209,7 +208,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 		new_result = false
 		i := 0
 		var Wvalue = s.wValue
-		for i < (Wvalue-1) {
+		for i < (Wvalue) {
 			log.Print("Send to others")
 			if i >= len(s.preferenceList) {
 				break
@@ -228,7 +227,6 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 			}
 			if s.preferenceList[i] == s.selfNode{
 				i++
-				Wvalue++
 				continue
 			}
 			rpc_call,e := rpc.DialHTTP("tcp", address)
@@ -277,7 +275,7 @@ func (s *DynamoServer) Get(key string, result *DynamoResult) error {
 	var temp_result DynamoResult
 	var clocks = make([]VectorClock,0)
 	log.Print("Sending to others")
-	for i < (Rvalue-1) {
+	for i < (Rvalue) {
 		if i >= len(s.preferenceList) {
 			break
 		}
