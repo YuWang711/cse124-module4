@@ -157,14 +157,14 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 		new_Object.Context = value.Context
 		new_Object.Value = value.Value
 		log.Print("nodeId", s.nodeID)
-		for i,_ := range s.Dynamo_Store[value.Key].EntryList {
+		s.Dynamo_Store[value.Key].EntryList = append(s.Dynamo_Store[value.Key].EntryList,new_Object)
+		/*for i,_ := range s.Dynamo_Store[value.Key].EntryList {
 			for index,element := range s.Dynamo_Store[value.Key].EntryList[i].Value{
 				if element != new_Object.Value[index] {
-					s.Dynamo_Store[value.Key].EntryList = append(s.Dynamo_Store[value.Key].EntryList,new_Object)
 					break
 				}
 			}
-		}
+		}*/
 		s.m.Unlock()
 		*result = true
 		log.Print("Out Put")
