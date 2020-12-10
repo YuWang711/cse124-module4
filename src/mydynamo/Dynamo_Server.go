@@ -88,7 +88,7 @@ func (s *DynamoServer) Put(value PutArgs, result *bool) error {
 		for _,element := range s.Dynamo_Store[value.Key].EntryList {
 			if value.Context.Clock.LessThan(element.Context.Clock){
 				if element.Context.Clock.Concurrent(value.Context.Clock){
-					if element.Context.Clock.Equals(value.Context.Clock){
+					if element.Context.Clock.LessThan(s.clock){
 						return errors.New("Put has failed new Context == old Context")
 					}
 					continue
